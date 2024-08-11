@@ -2,26 +2,17 @@
 import { reactive } from 'vue';
 import { useToast } from 'vue-toastification';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import { useJobStore } from '@/stores/JobStore'
+import { ROUTER, DEFAULT_DATA } from '@/config'
 
 const router = useRouter();
 const toast = useToast();
 
-const form = reactive({
-  type: 'Full-Time',
-  title: '',
-  description: '',
-  salary: '',
-  location: '',
-  company: {
-    name: '',
-    description: '',
-    contactEmail: '',
-    contactPhone: ''
-  }
-});
+const jobStore = useJobStore()
 
-const handleSubmit = async () => {
+const form = reactive(DEFAULT_DATA.JOBS);
+
+function handleSubmit() {
   const newJob = {
     title: form.title,
     description: form.description,
@@ -36,14 +27,16 @@ const handleSubmit = async () => {
     }
   };
 
-  try {
-    const res = await axios.post('/api/jobs', newJob);
-    toast.success('Job added successfully');
-    router.push(`/jobs/${res.data.id}`);
-  } catch (error) {
-    console.log('Error when creating new job', error);
-    toast.error('Job was not added');
-  }
+  jobStore.addNewJob(newJob, {
+    onSuccess: (res) => {
+      toast.success('Job added successfully');
+      router.push(ROUTER.JOB_DETAIL(res.data.id));
+    },
+    onError: (error) => {
+      console.log("Error while creating new job")
+      toast.error('Job was not added');
+    }
+  })
 };
 </script>
 

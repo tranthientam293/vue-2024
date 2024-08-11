@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { RouterLink } from 'vue-router';
+import { ROUTER } from '@/config'
 
 const props = defineProps({
   job: Object
@@ -36,7 +37,7 @@ const truncatedDescription = computed(() => {
           :class="`text-green-500 hover:text-green-600 ${showFullDescription && 'block'}`"
           @click="toggleShowFullDescription"
         >
-          {{ showFullDescription ? 'Less' : 'More' }}
+          {{ showFullDescription ? 'Collapse' : 'More' }}
         </button>
       </div>
 
@@ -50,7 +51,7 @@ const truncatedDescription = computed(() => {
           {{ job.location }}
         </div>
         <RouterLink
-          :to="'/jobs/' + job.id"
+          :to="ROUTER.JOB_DETAIL(job.id)"
           class="h-[36px] bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-center text-sm"
         >
           Read More

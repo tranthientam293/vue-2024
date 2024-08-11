@@ -1,6 +1,7 @@
 <script setup>
 import { RouterLink, useRoute } from 'vue-router';
 import logo from '@/assets/img/logo.png';
+import { ROUTER } from '@/config'
 
 const isActiveLink = (routePath) => {
   const route = useRoute();
@@ -9,15 +10,15 @@ const isActiveLink = (routePath) => {
 
 const routes = [
   {
-    path: '/',
+    path: ROUTER.HOME,
     name: 'Home'
   },
   {
-    path: '/jobs',
+    path: ROUTER.JOBS,
     name: 'Jobs'
   },
   {
-    path: '/jobs/add',
+    path: ROUTER.ADD_NEW_JOB,
     name: 'Add Jobs'
   }
 ];
@@ -29,7 +30,7 @@ const routes = [
       <div class="flex h-20 items-center justify-between">
         <div class="flex flex-1 items-center justify-center md:items-stretch md:justify-start">
           <!-- Logo -->
-          <RouterLink class="flex flex-shrink-0 items-center mr-4" to="/">
+          <RouterLink class="flex flex-shrink-0 items-center mr-4" :to="ROUTER.HOME">
             <img class="h-10 w-auto" v-bind:src="logo" alt="Vue Jobs" />
             <span class="hidden md:block text-white text-2xl font-bold ml-2">Vue Jobs</span>
           </RouterLink>

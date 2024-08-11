@@ -1,64 +1,59 @@
 <script setup>
 import { reactive, onMounted } from 'vue';
-import PulseLoader from 'vue-spinner/src/PulseLoader.vue';
 import { useRoute, RouterLink, useRouter } from 'vue-router';
-import { useToast } from 'vue-toastification';
-import axios from 'axios';
+import PulseLoader from 'vue-spinner/src/PulseLoader.vue';
 import BackButton from '@/components/BackButton.vue';
+import { useToast } from 'vue-toastification';
+import { useJobDetailStore } from '@/stores/JobDetailStore'
+import { ROUTER } from '@/config'
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
 const jobId = route.params.id;
+const jobDetailStore = useJobDetailStore(jobId)
 
-const state = reactive({
-  job: {},
-  isLoading: true
-});
+jobDetailStore.getJobDetail()
 
-const deleteJob = async () => {
-  try {
-    const confirm = window.confirm('Are you sure you want to delete this job?');
-    if (confirm) {
-      await axios.delete(`/api/jobs/${jobId}`);
-      toast.success('Job deleted successfully');
-      router.push('/jobs');
-    }
-  } catch (error) {
-    console.log('Error deleting job', error);
-    toast.error('Job was not deleted');
+function deleteJob(){
+  const confirm = window.confirm("Are you sure your want to delete this jobs?")
+
+  if(confirm){
+    jobDetailStore.deleteJob({
+      onSuccess:() => {
+        toast.success("Job deleted successfully")
+        router.push(ROUTER.JOBS)
+      },
+      onError:(error) => {
+        console.log("Error while deleting a job", error)
+        toast.error("Job was not deleted")
+      }
+    })
   }
-};
+}
 
-onMounted(async () => {
-  try {
-    const res = await axios.get(`/api/jobs/${jobId}`);
-    state.job = res.data;
-  } catch (error) {
-    console.log('Error fetching jobs', error);
-  } finally {
-    setTimeout(() => {
-      state.isLoading = false;
-    }, 1000);
-  }
-});
 </script>
 
 <template>
-  <BackButton destination="/jobs" />
-  <section v-if="!state.isLoading" class="bg-green-50">
+  <BackButton :destination="ROUTER.JOBS" />
+  <!-- Show loading spinner -->
+  <div v-if="jobDetailStore.isLoading" class="text-center text-gray-500 py-6">
+    <PulseLoader />
+  </div>
+
+  <section v-else class="bg-green-50">
     <div class="container m-auto py-10 px-6">
       <div class="grid grid-cols-1 md:grid-cols-70/30 w-full gap-6">
         <main>
           <div class="bg-white p-6 rounded-lg shadow-md text-center md:text-left">
-            <div class="text-gray-500 mb-4">{{ state.job.type }}</div>
-            <h1 class="text-3xl font-bold mb-4">{{ state.job.title }}</h1>
+            <div class="text-gray-500 mb-4">{{ jobDetailStore.jobDetail.type }}</div>
+            <h1 class="text-3xl font-bold mb-4">{{ jobDetailStore.jobDetail.title }}</h1>
             <div
               class="text-gray-500 mb-4 flex items-center align-middle justify-center md:justify-start"
             >
               <i class="pi pi-map-marker text-orange-700"></i>
-              <p class="text-orange-700 ml-2">{{ state.job.location }}</p>
+              <p class="text-orange-700 ml-2">{{ jobDetailStore.jobDetail.location }}</p>
             </div>
           </div>
 
@@ -66,43 +61,43 @@ onMounted(async () => {
             <h3 class="text-green-800 text-lg font-bold mb-6">Job Description</h3>
 
             <p class="mb-4">
-              {{ state.job.description }}
+              {{ jobDetailStore.jobDetail.description }}
             </p>
 
             <h3 class="text-green-800 text-lg font-bold mb-2">Salary</h3>
 
-            <p class="mb-4">{{ state.job.salary }} / Year</p>
+            <p class="mb-4">{{ jobDetailStore.jobDetail.salary }} / Year</p>
           </div>
         </main>
 
         <!-- Sidebar -->
         <aside>
           <!-- Company Info -->
-          <div class="bg-white p-6 rounded-lg shadow-md">
+          <div  class="bg-white p-6 rounded-lg shadow-md">
             <h3 class="text-xl font-bold mb-6">Company Info</h3>
 
-            <h2 class="text-2xl">{{ state.job.company.name }}</h2>
+            <h2 class="text-2xl">{{ jobDetailStore.jobDetail.company.name }}</h2>
 
             <p class="my-2">
-              {{ state.job.company.description }}
+              {{ jobDetailStore.jobDetail.company.description }}
             </p>
 
             <hr class="my-4" />
 
             <h3 class="text-xl">Contact Email:</h3>
 
-            <p class="my-2 bg-green-100 p-2 font-bold">{{ state.job.company.contactEmail }}</p>
+            <p class="my-2 bg-green-100 p-2 font-bold">{{ jobDetailStore.jobDetail.company.contactEmail }}</p>
 
             <h3 class="text-xl">Contact Phone:</h3>
 
-            <p class="my-2 bg-green-100 p-2 font-bold">{{ state.job.company.contactPhone }}</p>
-          </div>
+            <p class="my-2 bg-green-100 p-2 font-bold">{{ jobDetailStore.jobDetail.company.contactPhone }}</p>
+          </div> 
 
           <!-- Manage -->
           <div class="bg-white p-6 rounded-lg shadow-md mt-6">
             <h3 class="text-xl font-bold mb-6">Manage Job</h3>
             <RouterLink
-              v-bind:to="`/jobs/edit/${state.job.id}`"
+              v-bind:to="ROUTER.EDIT_JOB(jobDetailStore.jobDetail.id)"
               class="bg-green-500 hover:bg-green-600 text-white text-center font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline mt-4 block"
             >
               Edit Job
@@ -118,8 +113,5 @@ onMounted(async () => {
       </div>
     </div>
   </section>
-  <!-- Show loading spinner -->
-  <div v-else="state.isLoading" class="text-center text-gray-500 py-6">
-    <PulseLoader />
-  </div>
+
 </template>

@@ -1,35 +1,23 @@
 <script setup>
-import { reactive, onMounted } from 'vue';
-import axios from 'axios';
+import { reactive, watch} from 'vue';
 import { useToast } from 'vue-toastification';
 import { useRoute, useRouter } from 'vue-router';
 import PulseLoader from 'vue-spinner/src/PulseLoader.vue';
+import { useJobDetailStore } from '@/stores/JobDetailStore'
+import { ROUTER, DEFAULT_DATA } from '@/config'
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
 const jobId = route.params.id;
+const jobDetailStore = useJobDetailStore(jobId)
 
-const form = reactive({
-  type: 'Full-Time',
-  title: '',
-  description: '',
-  salary: '',
-  location: '',
-  company: {
-    name: '',
-    description: '',
-    contactEmail: '',
-    contactPhone: ''
-  }
-});
+const form = reactive(DEFAULT_DATA.JOBS);
 
-const state = reactive({
-  isLoading: true
-});
+jobDetailStore.getJobDetail()
 
-const handleSubmit = async () => {
+function handleSubmit() {
   const updatedJob = {
     title: form.title,
     description: form.description,
@@ -44,42 +32,38 @@ const handleSubmit = async () => {
     }
   };
 
-  try {
-    const res = await axios.put(`/api/jobs/${jobId}`, updatedJob);
-    toast.success('Job updated successfully');
-    router.push(`/jobs/${res.data.id}`);
-  } catch (error) {
-    console.log('Error when creating new job', error);
-    toast.error('Job was not added');
-  }
+  jobDetailStore.editJob(updatedJob, {
+    onSuccess: (res) => {
+      toast.success('Job updated successfully');
+      router.push(ROUTER.JOB_DETAIL(res.data.id));
+    },
+    onError:(error) => {
+      console.log("Error while editing a job", error)
+      toast.error('Job was not added');
+    }
+  })
 };
 
-onMounted(async () => {
-  try {
-    const res = await axios.get(`/api/jobs/${jobId}`);
-    const data = res.data;
+function setFormData() {
+  const data = jobDetailStore.jobDetail  
 
-    form.title = data.title;
-    form.type = data.type;
-    form.description = data.description;
-    form.salary = data.salary;
-    form.location = data.location;
-    form.company.name = data.company.name;
-    form.company.description = data.company.description;
-    form.company.contactEmail = data.company.contactEmail;
-    form.company.contactPhone = data.company.contactPhone;
-  } catch (error) {
-    console.log('Error fetching job', error);
-  } finally {
-    setTimeout(() => {
-      state.isLoading = false;
-    }, 1000);
-  }
-});
+  form.title = data.title;
+  form.type = data.type;
+  form.description = data.description;
+  form.salary = data.salary;
+  form.location = data.location;
+  form.company.name = data.company.name;
+  form.company.description = data.company.description;
+  form.company.contactEmail = data.company.contactEmail;
+  form.company.contactPhone = data.company.contactPhone;
+}
+
+watch(jobDetailStore, setFormData);
+
 </script>
 
 <template>
-  <section v-if="!state.isLoading" class="bg-green-50">
+  <section v-if="!jobDetailStore.isLoading" class="bg-green-50">
     <div class="container m-auto max-w-2xl py-24">
       <div class="bg-white px-6 py-8 mb-4 shadow-md rounded-md border m-4 md:m-0">
         <form @submit.prevent="handleSubmit">
