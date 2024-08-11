@@ -15,6 +15,13 @@ See [Vite Configuration Reference](https://vitejs.dev/config/).
 ```sh
 npm install
 ```
+### Environment Variable
+Duplicate `.env` file into `.env.local` and replace with your config
+
+### Start json-server
+```sh
+npm run server
+```
 
 ### Compile and Hot-Reload for Development
 
